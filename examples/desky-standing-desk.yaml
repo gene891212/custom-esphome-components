@@ -1,0 +1,50 @@
+# Example device config that consumes packages/desky-workflow.yaml.
+# Copy into your own ESPHome config directory, add the referenced
+# secrets to your secrets.yaml, and adjust substitutions as needed.
+
+esphome:
+  name: standing-desk
+  friendly_name: Standing Desk
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+logger:
+
+api:
+  encryption:
+    key: !secret standing_desk_api_key
+
+ota:
+  platform: esphome
+  password: !secret standing_desk_ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Standing-Desk Fallback Hotspot"
+    password: !secret standing_desk_ap_password
+
+captive_portal:
+
+# Only needed if your wiring differs from the defaults in
+# packages/desky-workflow.yaml. Otherwise this block can be omitted.
+substitutions:
+  desky_up_pin: GPIO8       # Move up | green wire
+  desky_down_pin: GPIO7     # Move down | yellow wire
+  desky_purple_pin: GPIO10  # purple wire
+  desky_request_pin: GPIO12
+  desky_memory_pin: GPIO13
+  desky_uart_rx_pin: GPIO44
+
+packages:
+  desky_workflow:
+    url: https://github.com/gene891212/custom-esphome-components
+    file: packages/desky-workflow.yaml
+    ref: main
+    refresh: 1d

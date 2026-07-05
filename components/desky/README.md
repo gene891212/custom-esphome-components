@@ -2,6 +2,42 @@
 
 This component provides support for reading the Desky sit/stand desk height and moving it to specific heights
 
+## Installation
+
+```yaml
+external_components:
+  - source:
+      type: git
+      url: https://github.com/gene891212/custom-esphome-components
+      ref: main
+    components: [desky]
+```
+
+## Usage with the full sit/stand workflow (recommended)
+
+[packages/desky-workflow.yaml](../../packages/desky-workflow.yaml) bundles this component together with the pin
+outputs, memory-button presets, and sit/stand scheduling automation used for a real desk. Reference it from your
+device YAML and only override the substitutions that differ from your wiring:
+
+```yaml
+substitutions:
+  desky_up_pin: GPIO8
+  desky_down_pin: GPIO7
+  desky_purple_pin: GPIO10
+  desky_uart_rx_pin: GPIO44
+
+packages:
+  desky_workflow:
+    url: https://github.com/gene891212/custom-esphome-components
+    file: packages/desky-workflow.yaml
+    ref: main
+    refresh: 1d
+```
+
+A full device config example is at [examples/desky-standing-desk.yaml](../../examples/desky-standing-desk.yaml).
+
+## Component config reference
+
 Example:
 ```yaml
 uart:
