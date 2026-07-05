@@ -64,10 +64,10 @@ script:
   # so restarting the schedule needs an explicit stop before execute.
   - id: restart_schedule
     then:
-      - script.stop: toggle_working_height_by_time
-      - script.execute: toggle_working_height_by_time
+      - script.stop: sit_stand_schedule
+      - script.execute: sit_stand_schedule
 
-  - id: toggle_working_height_by_time
+  - id: sit_stand_schedule
     then:
       - if:
           # Check if the working mode is enabled
@@ -188,7 +188,7 @@ button:
 
   # Memory Buttons
   - platform: template
-    name: 1
+    name: "M1"
     id: memory_1
     on_press:
       then:
@@ -200,12 +200,12 @@ button:
 
   - platform: output
     output: purple_wire
-    name: 2
+    name: "M2"
     id: memory_2
     duration: 300ms
 
   - platform: template
-    name: 3
+    name: "M3"
     id: memory_3
     on_press:
       then:
@@ -294,9 +294,9 @@ switch:
 
   - platform: template
     id: is_working
-    name: "Working"
+    name: "Work"
     optimistic: true
     on_turn_on:
       - script.execute: restart_schedule
     on_turn_off:
-      - script.stop: toggle_working_height_by_time
+      - script.stop: sit_stand_schedule
