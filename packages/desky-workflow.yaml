@@ -42,6 +42,31 @@ uart:
     rx_pin: ${desky_uart_rx_pin}
 
 script:
+  # Re-evaluates is_sitting from the current height/threshold, without
+  # waiting for a new height reading from the desk.
+  - id: evaluate_is_sitting
+    then:
+      - if:
+          condition:
+            lambda: 'return id(stand_sit_height_threshold).state >= id(desk_height).state;'
+          then:
+            binary_sensor.template.publish:
+              # Sitting Mode
+              id: is_sitting
+              state: ON
+          else:
+            binary_sensor.template.publish:
+              # Standing Mode
+              id: is_sitting
+              state: OFF
+
+  # script mode defaults to "single", which no-ops if already running,
+  # so restarting the schedule needs an explicit stop before execute.
+  - id: restart_schedule
+    then:
+      - script.stop: toggle_working_height_by_time
+      - script.execute: toggle_working_height_by_time
+
   - id: toggle_working_height_by_time
     then:
       - if:
@@ -53,12 +78,14 @@ script:
                 condition:
                   binary_sensor.is_on: is_sitting
                 then:
+                  - logger.log: "Sitting timer (re)started"
                   # Convert unit from minutes to milliseconds
                   - delay: !lambda "return id(sitting_time).state * 60 * 1000;"
                   - logger.log: "Sitting time up. Take a break"
                   # Adjust desk to standing height
-                  - button.press: memory_3
+                  - button.press: memory_2
                 else:
+                  - logger.log: "Standing timer (re)started"
                   - delay: !lambda "return id(standing_time).state * 60 * 1000;"
                   # Adjust desk to sitting height
                   - logger.log: "Standing time up."
@@ -78,20 +105,7 @@ desky:
       - multiply: 0.1 # Convert from mm to cm
     on_value:
       then:
-        # Setting the working mode
-        - if:
-            condition:
-              lambda: 'return id(stand_sit_height_threshold).state >= id(desk_height).state;'
-            then:
-              binary_sensor.template.publish:
-                # Sitting Mode
-                id: is_sitting
-                state: ON
-            else:
-              binary_sensor.template.publish:
-                # Standing Mode
-                id: is_sitting
-                state: OFF
+        - script.execute: evaluate_is_sitting
 
 binary_sensor:
   - platform: template
@@ -100,8 +114,7 @@ binary_sensor:
     # If adjust desk height manually, restart the script to reset the timer
     on_state:
       then:
-        - script.stop: toggle_working_height_by_time
-        - script.execute: toggle_working_height_by_time
+        - script.execute: restart_schedule
 
 output:
   - platform: gpio
@@ -217,8 +230,10 @@ number:
     initial_value: ${desky_stand_sit_threshold}
     on_value:
       then:
-        - script.stop: toggle_working_height_by_time
-        - script.execute: toggle_working_height_by_time
+        # Changing the threshold can flip sitting/standing immediately,
+        # even while the desk itself isn't moving
+        - script.execute: evaluate_is_sitting
+        - script.execute: restart_schedule
 
   - platform: template
     id: sitting_time
@@ -232,8 +247,7 @@ number:
     initial_value: ${desky_sitting_minutes}
     on_value:
       then:
-        - script.stop: toggle_working_height_by_time
-        - script.execute: toggle_working_height_by_time
+        - script.execute: restart_schedule
 
   - platform: template
     id: standing_time
@@ -247,8 +261,7 @@ number:
     initial_value: ${desky_standing_minutes}
     on_value:
       then:
-        - script.stop: toggle_working_height_by_time
-        - script.execute: toggle_working_height_by_time
+        - script.execute: restart_schedule
 
 switch:
   # Raise the desk
@@ -284,7 +297,6 @@ switch:
     name: "Working"
     optimistic: true
     on_turn_on:
-      - script.stop: toggle_working_height_by_time
-      - script.execute: toggle_working_height_by_time
+      - script.execute: restart_schedule
     on_turn_off:
       - script.stop: toggle_working_height_by_time
