@@ -274,10 +274,9 @@ switch:
       allow_other_uses: true
     interlock: lower_desk
     on_turn_on:
-      # Auto off after 15s just in case
-      - delay: 15s
+      # Auto off after 20s just in case
+      - delay: 20s
       - switch.turn_off: raise_desk
-
   # Lower the desk
   - platform: gpio
     id: lower_desk
@@ -288,8 +287,8 @@ switch:
       allow_other_uses: true
     interlock: raise_desk
     on_turn_on:
-      # Auto off after 15s just in case
-      - delay: 15s
+      # Auto off after 20s just in case
+      - delay: 20s
       - switch.turn_off: lower_desk
 
   - platform: template

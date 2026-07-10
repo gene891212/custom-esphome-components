@@ -36,6 +36,10 @@ packages:
 
 A full device config example is at [examples/desky-standing-desk.yaml](../../examples/desky-standing-desk.yaml).
 
+Want to control the desk directly over HTTP (e.g. to build your own UI without going through Home
+Assistant)? See [packages/desky-workflow-api.md](../../packages/desky-workflow-api.md) for the
+`web_server` REST API reference.
+
 ## Component config reference
 
 Example:
